@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Click the Dot</title>
+  <style>
+    :root {
+      --bg: #0b0f14;
+      --panel: #121824;
+      --text: #e6ebf2;
+      --muted: #9aa7b2;
+      --accent: #5ac8fa;
+      --accent-2: #7ef7c5;
+      --danger: #ff6b6b;
+      --shadow: 0 10px 24px rgba(0,0,0,.32);
+      --radius: 16px;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", Helvetica, Arial; background: radial-gradient(1200px 800px at 80% -10%, #162037 0%, var(--bg) 60%); color: var(--text); }
+
+    .wrap { max-width: 980px; margin: 28px auto; padding: 0 16px; }
+    header { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:16px; }
+    h1 { font-size: clamp(20px, 3.2vw, 28px); margin:0; letter-spacing:.2px; }
+    .badge { font-size: 12px; color: var(--muted); }
+
+    .panel { background: linear-gradient(180deg, #172033 0%, var(--panel) 100%); border: 1px solid #212a3c; border-radius: var(--radius); box-shadow: var(--shadow); }
+
+    .controls { display:flex; flex-wrap:wrap; gap:10px 14px; align-items:end; padding:14px 16px; border-bottom:1px solid #1e2636; }
+    .control { display:flex; flex-direction:column; gap:6px; }
+    label { font-size:12px; color: var(--muted); }
+    select, button { height:38px; border-radius:10px; border:1px solid #263149; background:#0f1523; color:var(--text); padding: 0 12px; outline:none; }
+    button { background:#0f1628; border-color:#2a3758; cursor:pointer; transition: transform .02s ease, box-shadow .2s ease, background .2s ease; }
+    button.primary { background: linear-gradient(180deg, #1b2a4a 0%, #17305a 100%); border-color:#2c4779; }
+    button:hover { box-shadow: 0 6px 18px rgba(0,0,0,.28); }
+    button:active { transform: translateY(1px) scale(.99); }
+
+    .stats { display:flex; gap:18px; align-items:center; margin-left:auto; }
+    .stat { font-variant-numeric: tabular-nums; font-size:14px; }
+    .stat em { font-style:normal; color: var(--muted); margin-right:6px; }
+
+    .board { position:relative; width:100%; aspect-ratio: 16/9; min-height: 360px; background: radial-gradient(900px 600px at 10% -20%, #10182b 0%, #0c1221 50%, #0a0f1b 100%); border-radius: 0 0 var(--radius) var(--radius); overflow:hidden; }
+    .grid { position:absolute; inset:0; background-image: radial-gradient(#1d2741 1px, transparent 1px); background-size: 24px 24px; opacity:.35; }
+
+    .dot { position:absolute; border-radius: 999px; background: radial-gradient(circle at 35% 30%, var(--accent-2), var(--accent)); box-shadow: 0 10px 24px rgba(90,200,250,.35), inset 0 -4px 10px rgba(0,0,0,.25); cursor: pointer; display:grid; place-items:center; }
+    .dot::after { content:""; width: 50%; height: 50%; border-radius:inherit; background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.8), rgba(255,255,255,0) 60%); filter: blur(2px); }
+    .pulse { animation: pulse 1s ease-out infinite; }
+    @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(122, 246, 197, 0.35);} 70% { box-shadow: 0 0 0 18px rgba(122, 246, 197, 0);} 100% { box-shadow: 0 0 0 0 rgba(122, 246, 197, 0);} }
+
+    .toast { position:absolute; top:10px; left:50%; transform:translateX(-50%); padding:6px 10px; border-radius:8px; background:#0e1628cc; border:1px solid #2b3a5c; font-size:12px; opacity:0; transition:opacity .25s ease; pointer-events:none; }
+    .toast.show { opacity:1; }
+
+    .footer { padding:10px 16px 16px; display:flex; justify-content:space-between; align-items:center; color:var(--muted); font-size:12px; }
+    .links a { color: #86b6ff; text-decoration: none; }
+    .links a:hover { text-decoration: underline; }
+
+    @media (max-width: 520px) {
+      .stats { width:100%; margin: 6px 0 0; justify-content:space-between; }
+      .controls { align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>Click the Dot <span class="badge">HTML • CSS • JS</span></h1>
+      <div class="links">
+        <a href="#" id="shareLink" title="깃허브 페이지에 올려 친구들과 공유!">share</a>
+      </div>
+    </header>
+
+    <section class="panel" aria-label="game">
+      <div class="controls">
+        <div class="control">
+          <label for="difficulty">난이도</label>
+          <select id="difficulty">
+            <option value="easy">Easy</option>
+            <option value="normal" selected>Normal</option>
+            <option value="hard">Hard</option>
+            <option value="insane">Insane</option>
+          </select>
+        </div>
+        <div class="control">
+          <label for="duration">게임 시간</label>
+          <select id="duration">
+            <option value="30">30초</option>
+            <option value="60" selected>60초</option>
+            <option value="90">90초</option>
+          </select>
+        </div>
+        <div class="control">
+          <label>&nbsp;</label>
+          <div style="display:flex; gap:8px;">
+            <button id="startBtn" class="primary">Start</button>
+            <button id="pauseBtn">Pause</button>
+            <button id="resetBtn">Reset</button>
+          </div>
+        </div>
+        <div class="stats">
+          <div class="stat"><em>Score</em><span id="score">0</span></div>
+          <div class="stat"><em>Miss</em><span id="miss">0</span></div>
+          <div class="stat"><em>Accuracy</em><span id="acc">0%</span></div>
+          <div class="stat"><em>Time</em><span id="time">60</span>s</div>
+          <div class="stat"><em>Best</em><span id="best">-</span></div>
+        </div>
+      </div>
+
+      <div class="board" id="board" role="application" aria-label="Click the Dot board">
+        <div class="grid" aria-hidden="true"></div>
+        <div class="toast" id="toast">Paused</div>
+      </div>
+      <div class="footer">
+        <div>💡 점이 사라지기 전에 클릭하면 점수가 올라가고, 놓치면 Miss가 증가합니다.</div>
+        <div class="links">by <a href="https://github.com/" target="_blank" rel="noreferrer noopener">GitHub Pages</a></div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // --- Game Settings ---
+    const DIFF = {
+      easy:   { size: 60, interval: 1200 },
+      normal: { size: 46, interval: 900 },
+      hard:   { size: 34, interval: 650 },
+      insane: { size: 28, interval: 500 }
+    };
+
+    // --- Elements ---
+    const board = document.getElementById('board');
+    const startBtn = document.getElementById('startBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const difficultySel = document.getElementById('difficulty');
+    const durationSel = document.getElementById('duration');
+    const scoreEl = document.getElementById('score');
+    const missEl = document.getElementById('miss');
+    const accEl = document.getElementById('acc');
+    const timeEl = document.getElementById('time');
+    const bestEl = document.getElementById('best');
+    const toast = document.getElementById('toast');
+
+    const shareLink = document.getElementById('shareLink');
+    shareLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      const url = location.href;
+      navigator.clipboard?.writeText(url);
+      showToast('주소 복사됨! 친구에게 공유하세요');
+    });
+
+    // --- State ---
+    let score = 0, miss = 0, clicks = 0, timeLeft = +durationSel.value;
+    let running = false; 
+    let spawnTimer = null, countdownTimer = null;
+    let currentDot = null; // HTMLElement
+
+    // Best score per difficulty + duration
+    function bestKey() { return `ctd-best-${difficultySel.value}-${durationSel.value}`; }
+    function loadBest() { const v = localStorage.getItem(bestKey()); bestEl.textContent = v ? v : '-'; }
+    function saveBestIfNeeded() { const v = parseInt(localStorage.getItem(bestKey())||'0',10); if (score > v) { localStorage.setItem(bestKey(), String(score)); loadBest(); showToast('🎉 New Best!'); } }
+
+    function resetState() {
+      stopTimers();
+      score = 0; miss = 0; clicks = 0; timeLeft = +durationSel.value; running = false;
+      scoreEl.textContent = '0'; missEl.textContent = '0'; accEl.textContent = '0%'; timeEl.textContent = timeLeft;
+      removeDot();
+      loadBest();
+    }
+
+    function accuracy() { const total = score + miss; return total === 0 ? 0 : Math.round((score / total) * 100); }
+
+    function updateStats() {
+      scoreEl.textContent = String(score);
+      missEl.textContent = String(miss);
+      accEl.textContent = `${accuracy()}%`;
+      timeEl.textContent = String(timeLeft);
+    }
+
+    function startGame() {
+      if (running) return;
+      running = true; hideToast();
+      // Lock selects while playing
+      difficultySel.disabled = true; durationSel.disabled = true;
+      const { interval } = DIFF[difficultySel.value];
+      spawnTimer = setInterval(spawnDot, interval);
+      countdownTimer = setInterval(() => {
+        timeLeft--; timeEl.textContent = String(timeLeft);
+        if (timeLeft <= 0) endGame();
+      }, 1000);
+      // Immediate first spawn
+      spawnDot();
+    }
+
+    function pauseGame() {
+      if (!running) return; running = false; stopTimers(); showToast('⏸ Paused'); }
+
+    function endGame() {
+      running = false; stopTimers(); removeDot();
+      saveBestIfNeeded();
+      difficultySel.disabled = false; durationSel.disabled = false;
+      showToast(`끝! Score ${score} • Acc ${accuracy()}%`);
+    }
+
+    function stopTimers() {
+      if (spawnTimer) { clearInterval(spawnTimer); spawnTimer = null; }
+      if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
+    }
+
+    function removeDot() {
+      if (currentDot && currentDot.parentNode) currentDot.parentNode.removeChild(currentDot);
+      currentDot = null;
+    }
+
+    function spawnDot() {
+      // If previous dot still there, it's a miss
+      if (currentDot) { miss++; updateStats(); removeDot(); }
+
+      const { size } = DIFF[difficultySel.value];
+      const rect = board.getBoundingClientRect();
+      const pad = 8; // keep inside
+      const maxLeft = rect.width - size - pad;
+      const maxTop  = rect.height - size - pad;
+      const left = Math.floor(pad + Math.random() * Math.max(maxLeft, pad));
+      const top  = Math.floor(pad + Math.random() * Math.max(maxTop, pad));
+
+      const dot = document.createElement('button');
+      dot.className = 'dot pulse';
+      dot.style.width = size + 'px';
+      dot.style.height = size + 'px';
+      dot.style.left = left + 'px';
+      dot.style.top = top + 'px';
+      dot.setAttribute('aria-label','target dot');
+
+      // Handle click / touch
+      const handleHit = (e) => {
+        e.preventDefault();
+        if (!running) return;
+        score++; updateStats();
+        dot.disabled = true; // avoid double counting
+        dot.style.transform = 'scale(0.85)';
+        dot.style.opacity = '0.7';
+        setTimeout(() => {
+          if (currentDot === dot) removeDot();
+        }, 50);
+      };
+      dot.addEventListener('click', handleHit, { passive: false });
+      dot.addEventListener('touchstart', handleHit, { passive: false });
+
+      removeDot();
+      board.appendChild(dot);
+      currentDot = dot;
+    }
+
+    function showToast(msg) { toast.textContent = msg; toast.classList.add('show'); clearTimeout(showToast._t); showToast._t = setTimeout(hideToast, 1500); }
